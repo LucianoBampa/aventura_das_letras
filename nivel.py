@@ -15,6 +15,7 @@ from config import (
 
 from elementos import Plataforma, Letra
 from jogador import Jogador
+from debug import debug
 
 
 class Nivel:
@@ -49,6 +50,9 @@ class Nivel:
         
         # Resetar seed para não afetar outras partes
         random.seed()
+
+        debug.print_debug(f"Nível iniciado: palavra={self.palavra_alvo}, dificuldade={self.dificuldade}", __name__)
+        debug.print_debug(f"Seed usada: {seed_valor}", __name__)
 
     def gerar_plataformas_por_palavra(self, palavra, dificuldade):
         cfg = CONFIG_PLATAFORMAS[dificuldade]

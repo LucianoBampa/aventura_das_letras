@@ -15,6 +15,7 @@ from config import (
 from nivel import Nivel
 from tela_formacao import TelaFormacao
 from telas import TelaMenu, TelaFim
+from debug import debug
 
 
 class Jogo:
@@ -83,9 +84,11 @@ class Jogo:
         """Processa eventos do jogo"""
         for evento in pygame.event.get():
             if evento.type == pygame.QUIT:
+                debug.print_debug(f"QUIT", __name__)
                 return False
                 
             if evento.type == pygame.KEYDOWN:
+                debug.print_debug(f"TYPE:{evento.type} KEY:{evento.key}", __name__)
                 # Menu
                 if self.estado == "menu" and evento.key == pygame.K_RETURN:
                     self.iniciar_nivel()
@@ -188,5 +191,6 @@ class Jogo:
 
 # Executar o jogo
 if __name__ == "__main__":
+    if "--debug" in sys.argv: debug.enable()
     jogo = Jogo()
     jogo.executar()
