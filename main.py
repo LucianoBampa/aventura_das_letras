@@ -40,6 +40,11 @@ class Jogo:
         # Estado do jogo
         self.estado = "menu"
         self.nivel_atual = 0
+
+        # Pontuação Global
+        self.pontuacao_total = 0
+        self.erros_totais = 0
+        self.acertos_totais = 0
         
         # Lista de palavras - agora suporta palavras de qualquer tamanho!
         self.palavras = [
@@ -47,10 +52,11 @@ class Jogo:
             "BOLA", 
             # "CASA", 
             # "FLOR", 
-            # "LIVRO",
-            # "PARALELEPIPEDO",
+            # "LIVRO",            
             # "COMPUTADOR",
-            # "FELICIDADE"
+            # "FELICIDADE",
+            # "PARALELEPIPEDO",
+            # "ANTICONSTITUCIONALISSIMAMENTE"
         ]
         
         self.nivel = None
@@ -68,16 +74,26 @@ class Jogo:
             self.nivel = Nivel(palavra, dificuldade, self.fonte_media)
             self.estado = "jogando"
         else:
-            TelaFim.iniciar_serpentinas()  # 🎉 cria as serpentinas UMA VEZ
+            TelaFim.iniciar_serpentinas()  # cria as serpentinas UMA VEZ
             self.estado = "fim"
             
     def proximo_nivel(self):
         """Avança para o próximo nível"""
+
+        # Acumula pontuação global
+        self.pontuacao_total += self.nivel.pontuacao
+        self.acertos_totais += self.nivel.acertos
+        self.erros_totais += self.nivel.erros
+
+        # Avança nível
         self.nivel_atual += 1
-        # A cada 2 níveis, aumenta a dificuldade
+
+        # A cada 2 níveis aumenta dificuldade
         if self.nivel_atual % 2 == 0 and self.dificuldade_atual < 2:
             self.dificuldade_atual += 1
+
         self.iniciar_nivel()
+
         
     def processar_eventos(self):
         """Processa eventos do jogo"""
@@ -86,12 +102,17 @@ class Jogo:
                 return False
                 
             if evento.type == pygame.KEYDOWN:
+                
+                # Tecla ESC fecha o jogo
+                if evento.key == pygame.K_ESCAPE:
+                    return False
+
                 # Menu
-                if self.estado == "menu" and evento.key == pygame.K_RETURN:
+                if self.estado == "menu" and evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     self.iniciar_nivel()
                     
                 # Jogando
-                elif self.estado == "jogando" and evento.key == pygame.K_RETURN:
+                elif self.estado == "jogando" and evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
                     if len(self.nivel.letras_coletadas) == len(self.nivel.palavra_alvo):
                         self.tela_formacao = TelaFormacao(
                             self.nivel.letras_coletadas,
@@ -101,18 +122,40 @@ class Jogo:
                         
                 # Formando palavra
                 elif self.estado == "formando":
+
                     if evento.key == pygame.K_BACKSPACE:
                         self.tela_formacao.remover_ultima()
-                    elif evento.key == pygame.K_RETURN:
+
+                    elif evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER):
+
+                        # Se já acertou → próximo nível
                         if self.tela_formacao.correto:
                             self.proximo_nivel()
+
+                        # Se ainda não acertou → verificar
                         elif len(self.tela_formacao.palavra_formada) > 0:
-                            self.tela_formacao.verificar()
-                            
+
+                            acertou = self.tela_formacao.verificar()
+
+                            # Se errou → aplicar penalidade
+                            if not acertou:
+
+                                self.tela_formacao.tentativas += 1
+
+                                penalidade = self.tela_formacao.tentativas * 5
+
+                                self.nivel.pontuacao -= penalidade
+
+                                if self.nivel.pontuacao < 0:
+                                    self.nivel.pontuacao = 0
+
                 # Fim
-                elif self.estado == "fim" and evento.key == pygame.K_r:
+                elif self.estado == "fim" and evento.key in (pygame.K_RETURN, pygame.K_KP_ENTER, pygame.K_r):
                     self.nivel_atual = 0
                     self.dificuldade_atual = 0
+                    self.pontuacao_total = 0
+                    self.acertos_totais = 0
+                    self.erros_totais = 0
                     self.estado = "menu"
             
             # Clique nas letras (formando palavra)
@@ -145,11 +188,13 @@ class Jogo:
             
         elif self.estado == "jogando":
             self.nivel.desenhar(
-                self.tela, 
-                self.fonte_pequena, 
-                self.fonte_media, 
-                self.fonte_grande
+                self.tela,
+                self.fonte_pequena,
+                self.fonte_media,
+                self.fonte_grande,
+                self.pontuacao_total
             )
+
             
         elif self.estado == "formando":
             self.tela_formacao.desenhar(
@@ -157,8 +202,11 @@ class Jogo:
                 self.fonte_titulo, 
                 self.fonte_grande, 
                 self.fonte_media, 
-                self.fonte_pequena
+                self.fonte_pequena,
+                self.pontuacao_total,
+                self.nivel.pontuacao
             )
+
             
         elif self.estado == "fim":
             TelaFim.desenhar(
@@ -166,7 +214,10 @@ class Jogo:
                 self.fonte_titulo, 
                 self.fonte_grande, 
                 self.fonte_media, 
-                self.fonte_pequena
+                self.fonte_pequena,
+                self.pontuacao_total,
+                self.acertos_totais,
+                self.erros_totais
             )
             
         pygame.display.flip()

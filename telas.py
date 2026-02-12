@@ -88,11 +88,12 @@ class TelaFim:
             })
 
     @staticmethod
-    def desenhar(tela, fonte_titulo, fonte_grande, fonte_media, fonte_pequena):
+    def desenhar(tela, fonte_titulo, fonte_grande, fonte_media, fonte_pequena,
+                 pontuacao_total, acertos_totais, erros_totais):
         """Desenha a tela de fim de jogo"""
         tela.fill(VERDE_SUCESSO)
 
-        # 🎉 Serpentinas caindo
+        # Serpentinas caindo
         for s in TelaFim.serpentinas:
             pygame.draw.line(
                 tela,
@@ -108,34 +109,68 @@ class TelaFim:
                 s["y"] = random.randint(-50, -10)
                 s["x"] = random.randint(0, LARGURA)
 
-        # Parabéns
+        centro_x = LARGURA // 2
+        pos_y = 150
+
+        # Título
         texto_sombra = fonte_titulo.render("PARABÉNS!", True, (0, 100, 0))
-        tela.blit(texto_sombra, texto_sombra.get_rect(center=(LARGURA//2 + 4, 184)))
+        tela.blit(texto_sombra, texto_sombra.get_rect(center=(centro_x + 4, pos_y + 4)))
 
         texto_parabens = fonte_titulo.render("PARABÉNS!", True, BRANCO)
-        tela.blit(texto_parabens, texto_parabens.get_rect(center=(LARGURA//2, 180)))
+        tela.blit(texto_parabens, texto_parabens.get_rect(center=(centro_x, pos_y)))
 
-        texto_fim = fonte_grande.render("Você completou todos os níveis!", True, BRANCO)
-        tela.blit(texto_fim, texto_fim.get_rect(center=(LARGURA//2, 280)))
+        # Pontuação Total
+        pos_y += 90
+        texto_pontos = fonte_grande.render(
+            f"Pontuação Total: {pontuacao_total}", True, BRANCO)
+        tela.blit(texto_pontos, texto_pontos.get_rect(center=(centro_x, pos_y)))
 
-        # Medalha
-        cx, cy = LARGURA // 2, 430
+        # Mensagem
+        pos_y += 70
+        texto_fim = fonte_media.render(
+            "Você completou todos os níveis!", True, BRANCO)
+        tela.blit(texto_fim, texto_fim.get_rect(center=(centro_x, pos_y)))
 
-        pygame.draw.rect(tela, ROXO, (cx - 30, cy - 130, 60, 70), border_radius=12)
-        pygame.draw.circle(tela, COR_LETRA, (cx, cy), 65)
-        pygame.draw.circle(tela, COR_LETRA_BORDA, (cx, cy), 65, 5)
-        pygame.draw.circle(tela, (255, 235, 150), (cx, cy), 45)
+        # Acertos
+        pos_y += 70
+        texto_acertos = fonte_media.render(
+            f"Acertos: {acertos_totais}", True, (0, 255, 0))
+        tela.blit(texto_acertos, texto_acertos.get_rect(center=(centro_x, pos_y)))
 
-        estrela = [
-            (cx, cy - 28), (cx + 8, cy - 8), (cx + 28, cy - 8),
-            (cx + 12, cy + 6), (cx + 18, cy + 26),
-            (cx, cy + 14),
-            (cx - 18, cy + 26), (cx - 12, cy + 6),
-            (cx - 28, cy - 8), (cx - 8, cy - 8)
-        ]
+        # Erros
+        pos_y += 50
+        texto_erros = fonte_media.render(
+            f"Erros: {erros_totais}", True, (255, 100, 100))
+        tela.blit(texto_erros, texto_erros.get_rect(center=(centro_x, pos_y)))
 
-        pygame.draw.polygon(tela, PRETO, [(x+3, y+3) for x, y in estrela])
-        pygame.draw.polygon(tela, AZUL_ESCURO, estrela)
+        # Aproveitamento
+        total = acertos_totais + erros_totais
+        percentual = int((acertos_totais / total) * 100) if total > 0 else 0
+
+        pos_y += 50
+        texto_percentual = fonte_media.render(
+            f"Aproveitamento: {percentual}%", True, (0, 255, 255))
+        tela.blit(texto_percentual, texto_percentual.get_rect(center=(centro_x, pos_y)))
+
+
+        # # Medalha
+        # cx, cy = LARGURA // 2, 430
+
+        # pygame.draw.rect(tela, ROXO, (cx - 30, cy - 130, 60, 70), border_radius=12)
+        # pygame.draw.circle(tela, COR_LETRA, (cx, cy), 65)
+        # pygame.draw.circle(tela, COR_LETRA_BORDA, (cx, cy), 65, 5)
+        # pygame.draw.circle(tela, (255, 235, 150), (cx, cy), 45)
+
+        # estrela = [
+        #     (cx, cy - 28), (cx + 8, cy - 8), (cx + 28, cy - 8),
+        #     (cx + 12, cy + 6), (cx + 18, cy + 26),
+        #     (cx, cy + 14),
+        #     (cx - 18, cy + 26), (cx - 12, cy + 6),
+        #     (cx - 28, cy - 8), (cx - 8, cy - 8)
+        # ]
+
+        # pygame.draw.polygon(tela, PRETO, [(x+3, y+3) for x, y in estrela])
+        # pygame.draw.polygon(tela, AZUL_ESCURO, estrela)
 
         # Reiniciar
         texto_r = fonte_media.render("Pressione R para jogar novamente", True, BRANCO)

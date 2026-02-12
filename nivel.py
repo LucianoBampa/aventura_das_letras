@@ -26,6 +26,12 @@ class Nivel:
         self.letras_coletadas = []
         self.completado = False
         self.fonte_media = fonte_media
+        self.pontuacao = 0
+        self.erros = 0
+        self.acertos = 0
+        self.sequencia_correta = True
+        self.mostrar_bonus = False
+        self.timer_bonus = 0
         
         # Seed aleatória baseada na palavra para variar layouts
         # Isso garante que a mesma palavra terá layouts diferentes em cada jogo
@@ -144,9 +150,43 @@ class Nivel:
         # Verificar colisão com letras
         letras_colididas = pygame.sprite.spritecollide(self.jogador, self.letras, True)
         for letra in letras_colididas:
-            self.letras_coletadas.append(letra.letra)
+            letra_coletada = letra.letra
+            indice_atual = len(self.letras_coletadas)
+
+            # Verifica sequência correta
+            if indice_atual < len(self.palavra_alvo) and letra_coletada == self.palavra_alvo[indice_atual]:
+                self.acertos += 1
+            else:
+                self.sequencia_correta = False
+
+            # Pontua sempre que coleta
+            self.pontuacao += 10
+
+            self.letras_coletadas.append(letra_coletada)
+
+        # Verifica se completou todas as letras
+        if len(self.letras_coletadas) == len(self.palavra_alvo) and not self.completado:
             
-    def desenhar(self, tela, fonte_pequena, fonte_media, fonte_grande):
+            self.completado = True
+            
+            # Bônus por concluir
+            self.pontuacao += 50
+            
+            # Bônus sequência perfeita
+            if self.sequencia_correta:
+                self.pontuacao += 40
+                self.mostrar_bonus = True
+                self.timer_bonus = 120  # 2 segundos
+
+        # Controla tempo do bônus na tela
+        if self.timer_bonus > 0:
+            self.timer_bonus -= 1
+        else:
+            self.mostrar_bonus = False
+
+
+            
+    def desenhar(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total):
         """Desenha todos os elementos do nível"""
         # Céu com degradê
         for y in range(ALTURA):
@@ -159,9 +199,15 @@ class Nivel:
         self.todas_sprites.draw(tela)
         
         # Desenhar HUD
-        self.desenhar_hud(tela, fonte_pequena, fonte_media, fonte_grande)
+        self.desenhar_hud(tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total)
+
+        if self.mostrar_bonus:
+            texto_bonus = fonte_grande.render("SEQUÊNCIA PERFEITA +40!", True, (255, 215, 0))
+            rect_bonus = texto_bonus.get_rect(center=(LARGURA // 2, 150))
+            tela.blit(texto_bonus, rect_bonus)
+
         
-    def desenhar_hud(self, tela, fonte_pequena, fonte_media, fonte_grande):
+    def desenhar_hud(self, tela, fonte_pequena, fonte_media, fonte_grande, pontuacao_total):
         """Desenha a interface"""
         # Painel superior com fundo semi-transparente
         painel = pygame.Surface((LARGURA, 120))
@@ -197,6 +243,21 @@ class Nivel:
         texto_contador = fonte_grande.render(f"{coletadas}/{total}", True, cor_contador)
         rect_contador = texto_contador.get_rect(right=LARGURA - 20, top=20)
         tela.blit(texto_contador, rect_contador)
+
+        # Pontuação da sessão
+        texto_total = fonte_media.render(f"Total: {pontuacao_total + self.pontuacao}", True, BRANCO)
+        tela.blit(texto_total, (LARGURA - 280, 20))
+
+        # Pontos do nível atual
+        texto_nivel = fonte_pequena.render(f"Nível: +{self.pontuacao}", True, BRANCO)
+        tela.blit(texto_nivel, (LARGURA - 280, 60))
+
+
+        # Acertos
+        texto_acertos = fonte_pequena.render(f"Acertos: {self.acertos}", True, VERDE_SUCESSO)
+        tela.blit(texto_acertos, (LARGURA - 250, 100))
+
+
         
         # Instruções
         if coletadas == total:
