@@ -15,6 +15,7 @@ from config import (
 
 from elementos import Plataforma, Letra
 from jogador import Jogador
+from debug import debug
 
 
 class Nivel:
@@ -55,6 +56,9 @@ class Nivel:
         
         # Resetar seed para não afetar outras partes
         random.seed()
+
+        debug.print_debug(f"Nível iniciado: palavra={self.palavra_alvo}, dificuldade={self.dificuldade}", __name__)
+        debug.print_debug(f"Seed usada: {seed_valor}", __name__)
 
     def gerar_plataformas_por_palavra(self, palavra, dificuldade):
         cfg = CONFIG_PLATAFORMAS[dificuldade]
@@ -148,14 +152,14 @@ class Nivel:
         self.letras.update()
         
         # Verificar colisão com letras
-        letras_colididas = pygame.sprite.spritecollide(self.jogador, self.letras, True)
+        letras_colididas = pygame.sprite.spritecollide(self.jogador, self.letras, True) # type: ignore
         for letra in letras_colididas:
             letra_coletada = letra.letra
             indice_atual = len(self.letras_coletadas)
 
             # Verifica sequência correta
             if indice_atual < len(self.palavra_alvo) and letra_coletada == self.palavra_alvo[indice_atual]:
-                self.acertos += 1
+                pass
             else:
                 self.sequencia_correta = False
 
